@@ -268,7 +268,7 @@ static cpu_instruction_t _instr_table[0xff] = {
 
     // TYA
     [0x98] = { .handler = _cpu_tya, .cycles = 2 },
-}
+};
 
 static cpu_t _cpu;
 
