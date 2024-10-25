@@ -54,7 +54,7 @@ typedef struct {
     uint8_t flags;
 } cpu_t;
 
-#ifdef MODULE_CPU_ENABLE
+#ifdef ATARI2600_CONF_CPU_ENABLE
 
 /*
  * @brief Initialize the CPU

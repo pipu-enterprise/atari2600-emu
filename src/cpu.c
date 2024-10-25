@@ -1,4 +1,4 @@
-#ifdef MODULE_CPU_ENABLE
+#ifdef ATARI2600_CONF_CPU_ENABLE
 
 #include "cpu.h"
 #include "memory.h"

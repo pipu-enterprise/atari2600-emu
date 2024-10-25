@@ -1,6 +1,6 @@
 #include "memory.h"
 
-#ifdef MODULE_MEMORY_ENABLE
+#ifdef ATARI2600_CONF_MEMORY_ENABLE
 
 #include <string.h>
 
