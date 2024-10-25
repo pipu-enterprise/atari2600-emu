@@ -289,58 +289,59 @@ void cpu_step() {
     } 
 }
 
-uint8_t _cpu_fetch_imm() {
+uint8_t cpu_fetch_imm() {
     return memory_read(_cpu.pc++);
 }
 
-uint16_t _cpu_fetch_abs() {
+uint16_t cpu_fetch_abs() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
     return address;
 }
 
-uint16_t _cpu_fetch_absx() {
+uint16_t cpu_fetch_absx() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
     address += _cpu.x;
     return address;
 }
 
-uint16_t _cpu_fetch_absy() {
+uint16_t cpu_fetch_absy() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
     address += _cpu.y;
     return address;
 }
 
-uint16_t _cpu_fetch_indx() {
+uint16_t cpu_fetch_indx() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
     address += _cpu.x;
     return address;
 }
 
-uint16_t _cpu_fetch_indy() {
+uint16_t cpu_fetch_indy() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
     address += _cpu.y;
     return address;
 }
 
-uint8_t _cpu_fetch_zp() {
+uint8_t cpu_fetch_zp() {
     return memory_read(_cpu.pc++);
 }
 
-uint8_t _cpu_fetch_zpx() {
+uint8_t cpu_fetch_zpx() {
     return (memory_read(_cpu.pc++) + _cpu.x) & 0xff;
 }
 
-uint8_t _cpu_fetch_zpy() {
+uint8_t cpu_fetch_zpy() {
     return (memory_read(_cpu.pc++) + _cpu.y) & 0xff;
 }
 
+
 static _cpu_adc_imm() {
-    uint8_t data = memory_read(_cpu.pc);
+    uint
 }
 
 #endif // MODULE_CPU_ENABLE
