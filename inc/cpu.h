@@ -8,7 +8,7 @@
 /*
  * @brief CPU instruction handler
  */ 
-typedef (void)(*cpu_instruction_handler_t)(cpu_t *cpu);
+typedef (void)(*cpu_instruction_handler_t)();
 
 /*
  * @brief An enum containing the CPU flags with their respective bitmask values
