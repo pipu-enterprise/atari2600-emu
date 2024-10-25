@@ -71,6 +71,70 @@ void cpu_reset();
  */
 void cpu_step();
 
+/*
+ * @brief Fetch an immediate value
+ *
+ * @return The immediate value
+ */
+uint8_t cpu_fetch_imm();
+
+/*
+ * @brief Fetch an absolute value
+ *
+ * @return The absolute value
+ */
+uint16_t cpu_fetch_abs();
+
+/*
+ * @brief Fetch an absolute value with the x register
+ *
+ * @return The absolute value with the x register
+ */
+uint16_t cpu_fetch_absx();
+
+/*
+ * @brief Fetch an absolute value with the y register
+ *
+ * @return The absolute value with the y register
+ */
+uint16_t cpu_fetch_absy();
+
+/*
+ * @brief Fetch a zero page value
+ *
+ * @return The zero page value
+ */
+uint8_t cpu_fetch_zp();
+
+/*
+ * @brief Fetch a zero page value with the x register
+ *
+ * @return The zero page value with the x register
+ */
+uint8_t cpu_fetch_zpx();
+
+/*
+ * @brief Fetch a zero page value with the y register
+ *
+ * @return The zero page value with the y register
+ */
+uint8_t cpu_fetch_zpy();
+
+/*
+ * @brief Fetch an indexed indirect value
+ *
+ * @return The indexed indirect value
+ */
+uint16_t cpu_fetch_indx();
+
+/*
+ * @brief Fetch an indirect indexed value
+ *
+ * @return The indirect indexed value
+ */
+uint16_t cpu_fetch_indy();
+
+
 #else
 
 #define cpu_init(cpu) (NULL)
