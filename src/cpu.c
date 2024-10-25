@@ -339,9 +339,23 @@ uint8_t cpu_fetch_zpy() {
     return (memory_read(_cpu.pc++) + _cpu.y) & 0xff;
 }
 
+uint8_t cpu_set_flag(cpu_flag_t mask, uint8_t value) {
+    _cpu.flags &= ~(1 << mask);
+    _cpu.flags |= value != 0 << mask;
+}
+
 
 static _cpu_adc_imm() {
-    uint
+
+    uint8_t operand = cpu_fetch_imm();
+    _cpu.a += cpu_fetch_imm();
+
+    _cpu.flags |=
+        _cpu.a & 0x80 |
+        _cpu.a == 0 << CPU_FLAG_ZERO |
+        _cpu.a
+
+
 }
 
 #endif // MODULE_CPU_ENABLE

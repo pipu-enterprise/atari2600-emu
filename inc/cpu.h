@@ -134,6 +134,14 @@ uint16_t cpu_fetch_indx();
  */
 uint16_t cpu_fetch_indy();
 
+/*
+ * @brief Set cpu flag
+ *
+ * @param mask Flag mask to set
+ * @param value The value of the flag
+ */
+uint8_t cpu_set_flag(cpu_flag_t mask, uint8_t value);
+
 
 #else
 
