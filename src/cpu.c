@@ -1,9 +1,9 @@
-#ifdef ATARI2600_CONF_CPU_ENABLE
-
 #include "cpu.h"
 #include "memory.h"
 
 #include <string.h>
+
+#ifdef ATARI2600_CONF_CPU_ENABLE
 
 static cpu_instruction_t _instr_table[0xff] = {
     // ADC
@@ -962,5 +962,148 @@ static void _cpu_iny() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
 }
+void _cpu_jmp_abs(){
+    _cpu.pc = cpu_fetch_abs();
+}
+
+void _cpu_jmp_ind(){
+    _cpu.pc = memory_read(cpu_fetch_abs());
+}
+
+void _cpu_jsr(){
+    memory_write(_cpu.sp++, _cpu.pc+1);
+    _cpu.pc = cpu_fetch_abs();
+}
+
+void _cpu_lda_imm(){
+    _cpu.a = cpu_fetch_imm();
+}
+
+void _cpu_lda_zp(){
+    _cpu.a = memory_read(cpu_fetch_zp());
+}
+
+void _cpu_lda_zpx(){
+    _cpu.a = memory_read(cpu_fetch_zp() + _cpu.x);
+
+}
+
+void _cpu_lda_abs(){
+    _cpu.a = memory_read(cpu_fetch_abs());
+}
+
+void _cpu_lda_absx(){
+    _cpu.a = memory_read(cpu_fetch_absx());
+}
+
+void _cpu_lda_absy(){
+    _cpu.a = memory_read(cpu_fetch_absy());
+}
+
+void _cpu_lda_indx(){
+    _cpu.a = memory_read(cpu_fetch_indx());
+}
+
+void _cpu_lda_indy(){
+    _cpu.a = memory_read(cpu_fetch_indy());
+}
+
+void _cpu_lda_imm(){
+    _cpu.a = cpu_fetch_imm();
+}
+
+void _cpu_lda_zp(){
+    _cpu.a = memory_read(cpu_fetch_zp());
+}
+
+void _cpu_lda_zpx(){
+    _cpu.a = memory_read(cpu_fetch_zp() + _cpu.x);
+}
+
+void _cpu_lda_abs(){
+    _cpu.a = memory_read(cpu_fetch_abs());
+}
+
+void _cpu_lda_absx(){
+    _cpu.a = memory_read(cpu_fetch_absx());
+}
+
+void _cpu_lda_absy(){
+    _cpu.a = memory_read(cpu_fetch_absy());
+}
+
+void _cpu_lda_indx(){
+    _cpu.a = memory_read(cpu_fetch_indx());
+}
+
+void _cpu_lda_indy(){
+    _cpu.a = memory_read(cpu_fetch_indy());
+}
+
+void _cpu_ldx_imm(){
+    _cpu.x = cpu_fetch_imm();
+}
+
+void _cpu_ldx_zp(){
+    _cpu.x = memory_read(cpu_fetch_zp());
+}
+
+void _cpu_ldx_zpy(){
+    _cpu.x = memory_read(cpu_fetch_zp() + _cpu.y);
+}
+
+void _cpu_ldx_abs(){
+    _cpu.x = memory_read(cpu_fetch_abs());
+}
+
+void _cpu_ldx_absy(){
+    _cpu.x = memory_read(cpu_fetch_absy());
+}
+
+void _cpu_ldy_imm(){
+    _cpu.y = cpu_fetch_imm();
+}
+
+void _cpu_ldy_zp(){
+    _cpu.y = memory_read(cpu_fetch_zp());
+}
+
+void _cpu_ldy_zpx(){
+    _cpu.y = memory_read(cpu_fetch_zp() + _cpu.x);
+}
+
+void _cpu_ldy_abs(){
+    _cpu.y = memory_read(cpu_fetch_abs());
+}
+
+void _cpu_ldy_absx(){
+    _cpu.y = memory_read(cpu_fetch_absx());
+}
+
+void _cpu_lsr_a(){
+    cpu_set_flag(CPU_FLAG_CARRY, _cpu.a & 0x01);
+    _cpu.a = _cpu.a >> 1;
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+}
+
+void _cpu_lsr_zp(){
+    uint8_t addr = cpu_fetch_zp();
+    uint8_t data = memory_read(addr);
+    cpu_set_flag(CPU_FLAG_CARRY, data & 0x01);
+}
+
+void _cpu_lsr_zpx(){
+    
+}
+
+void _cpu_lsr_abs(){
+    
+}
+
+void _cpu_lsr_absx(){
+    
+}
+
+
 
 #endif // MODULE_CPU_ENABLE

@@ -22,7 +22,7 @@ typedef struct {
     uint8_t rom[MEMORY_ROM_SIZE];
 } memory_t;
 
-#ifdef MODULE_MEMORY_ENABLE
+#ifdef ATARI2600_CONF_MEMORY_ENABLE
 
 /*
  * @brief Initialize the memory
