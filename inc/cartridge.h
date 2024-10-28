@@ -5,8 +5,8 @@
 
 
 typedef struct {
-    void(*cart_write)(const uint16_t address, const uint8_t data);
-    uint8_t(*cart_read)(const uint16_t address);
+    void(*cart_write)(uint16_t address, uint8_t data);
+    uint8_t(*cart_read)(uint16_t address);
 } cartridge_t;
 
 #ifdef ATARI2600_CONF_CARTRIDGE_ENABLE

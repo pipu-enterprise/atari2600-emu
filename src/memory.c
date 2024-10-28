@@ -15,41 +15,43 @@ void memory_reset() {
     memory_init();
 }
 
-void memory_write(const uint16_t address, const uint8_t data) {
+void memory_write(uint16_t address, uint8_t data) {
     if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
-        _memory.ram[(address - MEMORY_RAM_BASE) % MEMORY_RAM_SIZE] = data;
+        address = (address - MEMORY_RAM_BASE) % MEMORY_RAM_SIZE;
+        _memory.ram[address] = data;
     } else if (
             address >= MEMORY_PPU_REG_BASE &&
             address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_SIZE) {
-
-    } else if (
-            address >= MEMORY_PPU_REG_BASE &&
-            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_MIRROR_SIZE) {
+        address = (address - MEMORY_PPU_REG_BASE) % MEMORY_PPU_REG_SIZE;
+        /** @todo */
 
     } else if (
             address >= MEMORY_APU_IO_REG_BASE &&
             address <= MEMORY_APU_IO_REG_BASE + MEMORY_APU_IO_REG_SIZE) {
-
+        address = (address - MEMORY_APU_IO_REG_BASE) % MEMORY_APU_IO_REG_SIZE;
+        /** @todo */
+        
     } else {
         _memory.cartridge.cart_write(address, data);
     }
 }
 
-uint8_t memory_read(const uint16_t address) {
+uint8_t memory_read(uint16_t address) {
 
     if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
-        return _memory.ram[(address - MEMORY_RAM_BASE) % MEMORY_RAM_SIZE];
+        address = (address - MEMORY_RAM_BASE) % MEMORY_RAM_SIZE;
+        return _memory.ram[address];
     } else if (
             address >= MEMORY_PPU_REG_BASE &&
             address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_SIZE) {
-
-    } else if (
-            address >= MEMORY_PPU_REG_BASE &&
-            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_MIRROR_SIZE) {
+        address = (address - MEMORY_PPU_REG_BASE) % MEMORY_PPU_REG_SIZE;
+        /** @todo */
 
     } else if (
             address >= MEMORY_APU_IO_REG_BASE &&
             address <= MEMORY_APU_IO_REG_BASE + MEMORY_APU_IO_REG_SIZE) {
+        address = (address - MEMORY_APU_IO_REG_BASE) % MEMORY_APU_IO_REG_SIZE;
+        /** @todo */
 
     }
     return _memory.cartridge.cart_read(address);

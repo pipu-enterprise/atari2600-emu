@@ -169,14 +169,14 @@ uint16_t cpu_fetch_indy();
  * @param mask Flag mask to set
  * @param value The value of the flag
  */
-void cpu_set_flag(const cpu_flag_t mask, const uint8_t value);
+void cpu_set_flag(cpu_flag_t mask, uint8_t value);
 
 /*
  * @brief Get cpu flag
  *
  * @param mask Flag mask to get
  */
-uint8_t cpu_get_flag(const cpu_flag_t mask);
+uint8_t cpu_get_flag(cpu_flag_t mask);
 
 static void _cpu_adc_imm();
 static void _cpu_adc_zp();
@@ -235,7 +235,7 @@ static void _cpu_dec_absx();
 static void _cpu_dex();
 static void _cpu_dey();
 static void _cpu_eor_imm();
-static void const _cpu_eor_zp();
+static void _cpu_eor_zp();
 static void _cpu_eor_zpx();
 static void _cpu_eor_abs();
 static void _cpu_eor_absx();

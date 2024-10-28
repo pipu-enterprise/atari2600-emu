@@ -352,12 +352,12 @@ uint8_t cpu_fetch_zpy() {
     return (memory_read(_cpu.pc++) + _cpu.y) & 0xff;
 }
 
-void cpu_set_flag(const cpu_flag_t mask, const uint8_t value) {
+void cpu_set_flag(cpu_flag_t mask, uint8_t value) {
     _cpu.flags &= ~(1 << mask);
     _cpu.flags |= value != 0 << mask;
 }
 
-uint8_t cpu_get_flag(const cpu_flag_t mask){
+uint8_t cpu_get_flag(cpu_flag_t mask){
     return (_cpu.flags & (1<<mask)) != 0;
 }
 
