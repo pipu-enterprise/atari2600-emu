@@ -277,6 +277,11 @@ void cpu_init() {
 }
 
 void cpu_reset() {
+    _cpu.pc = memory_read(RES_ADDR_LO) | (memory_read(RES_ADDR_HI) << 8);
+    _cpu.sp = 0xFF;
+    _cpu.a = 0;
+    _cpu.x = 0;
+    _cpu.y = 0;
     /** @todo */
 }
 
@@ -313,6 +318,13 @@ uint16_t cpu_fetch_absy() {
     return address;
 }
 
+
+uint16_t cpu_fetch_ind() {
+    uint16_t address = memory_read(_cpu.pc++);
+    address |= memory_read(_cpu.pc++) << 8;
+    return address;
+}
+
 uint16_t cpu_fetch_indx() {
     uint16_t address = memory_read(_cpu.pc++);
     address |= memory_read(_cpu.pc++) << 8;
@@ -339,13 +351,13 @@ uint8_t cpu_fetch_zpy() {
     return (memory_read(_cpu.pc++) + _cpu.y) & 0xff;
 }
 
-void cpu_set_flag(cpu_flag_t mask, uint8_t value) {
+void cpu_set_flag(const cpu_flag_t mask, const uint8_t value) {
     _cpu.flags &= ~(1 << mask);
     _cpu.flags |= value != 0 << mask;
 }
 
-uint8_t cpu_get_flag(cpu_flag_t mask){
-    return _cpu.flags & (1<<mask) != 0;
+uint8_t cpu_get_flag(const cpu_flag_t mask){
+    return (_cpu.flags & (1<<mask)) != 0;
 }
 
 
@@ -359,6 +371,7 @@ static void _cpu_adc_imm() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+        /** @todo overflow */
 }
 
 static void _cpu_adc_zp() {
@@ -370,6 +383,7 @@ static void _cpu_adc_zp() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_zpx() {
@@ -381,6 +395,7 @@ static void _cpu_adc_zpx() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_abs() {
@@ -392,6 +407,7 @@ static void _cpu_adc_abs() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_absx() {
@@ -403,6 +419,7 @@ static void _cpu_adc_absx() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_absy() {
@@ -414,6 +431,7 @@ static void _cpu_adc_absy() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_indx() {
@@ -425,6 +443,7 @@ static void _cpu_adc_indx() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_adc_indy() {
@@ -436,6 +455,7 @@ static void _cpu_adc_indy() {
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     cpu_set_flag(CPU_FLAG_CARRY, carry);
+    /** @todo overflow */
 }
 
 static void _cpu_and_imm() {
@@ -454,13 +474,6 @@ static void _cpu_and_zp() {
 
 static void _cpu_and_zpx() {
     _cpu.a &= memory_read(cpu_fetch_zpx());
-
-    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
-    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
-}
-
-static void _cpu_and_abs() {
-    _cpu.a &= memory_read(cpu_fetch_abs());
 
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
@@ -617,15 +630,18 @@ static void _cpu_bpl() {
 }
 
 static void _cpu_brk() {
-    memory_write(_cpu.sp++, (_cpu.pc+1) & 0xff);
-    memory_write(_cpu.sp++, (_cpu.pc+1)>>8);
+    PUSH_16(_cpu.pc+1);
     
     cpu_set_flag(CPU_FLAG_INTERRUPT, 1);
-    memory_write(_cpu.sp++, _cpu.flags | CPU_FLAG_BREAK);
+    PUSH_8(_cpu.flags | CPU_FLAG_BREAK);
+    _cpu.pc = memory_read(IRQ_ADDR_LO) | (memory_read(IRQ_ADDR_HI) << 8);
 }
 
 static void _cpu_bvc(){
-    //TODO
+    uint8_t data = cpu_fetch_imm();
+
+    if (cpu_get_flag(CPU_FLAG_OVERFLOW) == 0)
+        _cpu.pc = (int)_cpu.pc + (int8_t)data;
 }
 
 static void _cpu_bvs() {
@@ -654,136 +670,127 @@ static void _cpu_clv() {
 static void _cpu_cmp_imm() {
     uint8_t result = _cpu.a - cpu_fetch_imm();
 
-    //TODO Carry
     //cpu_set_flag(CPU_FLAG_CARRY, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_zp() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_zp());
 
-    //TODO Carry
     //cpu_set_flag(CPU_FLAG_CARRY, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_zpx() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_zpx());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
-}
-
-static void _cpu_cmp_zpy() {
-    uint8_t result = _cpu.a - memory_read(cpu_fetch_zpy());
-
-    //TODO carry
-    //cpu_set_flag(cpu_flag_carry, result >> 7);
-    cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
-    cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_abs() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_abs());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_absx() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_absx());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_absy() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_absy());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_indx() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_indx());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cmp_indy() {
     uint8_t result = _cpu.a - memory_read(cpu_fetch_indy());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpx_imm() {
     uint8_t result = _cpu.x - cpu_fetch_imm();
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpx_zp() {
     uint8_t result = _cpu.x - memory_read(cpu_fetch_zp());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpx_abs() {
     uint8_t result = _cpu.x - memory_read(cpu_fetch_abs());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpy_imm() {
     uint8_t result = _cpu.y - cpu_fetch_imm();
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpy_zp() {
     uint8_t result = _cpu.y - memory_read(cpu_fetch_zp());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_cpy_abs() {
     uint8_t result = _cpu.y - memory_read(cpu_fetch_abs());
 
-    //TODO carry
     //cpu_set_flag(cpu_flag_carry, result >> 7);
     cpu_set_flag(CPU_FLAG_NEGATIVE, result >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, result == 0);
+    /** @todo carry */
 }
 
 static void _cpu_dec_zp() {
@@ -860,15 +867,6 @@ static void _cpu_eor_zp() {
 
 static void _cpu_eor_zpx() {
     uint8_t value = memory_read(cpu_fetch_zpx());
-
-    _cpu.a = _cpu.a ^ value;
-
-    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
-    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
-}
-
-static void _cpu_eor_zpy() {
-    uint8_t value = memory_read(cpu_fetch_zpy());
 
     _cpu.a = _cpu.a ^ value;
 
@@ -984,120 +982,141 @@ static void _cpu_jmp_ind() {
 }
 
 static void _cpu_jsr() {
-    memory_write(_cpu.sp++, (_cpu.pc+2) & 0xff);
-    memory_write(_cpu.sp++, (_cpu.pc+2)>>8);
+    PUSH_16(_cpu.pc+2);
     _cpu.pc = cpu_fetch_abs();
 }
 
 static void _cpu_lda_imm() {
     _cpu.a = cpu_fetch_imm();
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_zp() {
     _cpu.a = memory_read(cpu_fetch_zp());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_zpx() {
-    _cpu.a = memory_read(cpu_fetch_zp() + _cpu.x);
+    _cpu.a = memory_read(cpu_fetch_zpx());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
 
 }
 
 static void _cpu_lda_abs() {
     _cpu.a = memory_read(cpu_fetch_abs());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_absx() {
     _cpu.a = memory_read(cpu_fetch_absx());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_absy() {
     _cpu.a = memory_read(cpu_fetch_absy());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_indx() {
     _cpu.a = memory_read(cpu_fetch_indx());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+
 }
 
 static void _cpu_lda_indy() {
     _cpu.a = memory_read(cpu_fetch_indy());
-}
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
 
-static void _cpu_lda_imm() {
-    _cpu.a = cpu_fetch_imm();
-}
-
-static void _cpu_lda_zp() {
-    _cpu.a = memory_read(cpu_fetch_zp());
-}
-
-static void _cpu_lda_zpx() {
-    _cpu.a = memory_read(cpu_fetch_zp() + _cpu.x);
-}
-
-static void _cpu_lda_abs() {
-    _cpu.a = memory_read(cpu_fetch_abs());
-}
-
-static void _cpu_lda_absx() {
-    _cpu.a = memory_read(cpu_fetch_absx());
-}
-
-static void _cpu_lda_absy() {
-    _cpu.a = memory_read(cpu_fetch_absy());
-}
-
-static void _cpu_lda_indx() {
-    _cpu.a = memory_read(cpu_fetch_indx());
-}
-
-static void _cpu_lda_indy() {
-    _cpu.a = memory_read(cpu_fetch_indy());
 }
 
 static void _cpu_ldx_imm() {
     _cpu.x = cpu_fetch_imm();
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+
 }
 
 static void _cpu_ldx_zp() {
     _cpu.x = memory_read(cpu_fetch_zp());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+
 }
 
 static void _cpu_ldx_zpy() {
-    _cpu.x = memory_read(cpu_fetch_zp() + _cpu.y);
+    _cpu.x = memory_read(cpu_fetch_zpy());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+
 }
 
 static void _cpu_ldx_abs() {
     _cpu.x = memory_read(cpu_fetch_abs());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+
 }
 
 static void _cpu_ldx_absy() {
     _cpu.x = memory_read(cpu_fetch_absy());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+
 }
 
 static void _cpu_ldy_imm() {
     _cpu.y = cpu_fetch_imm();
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+
 }
 
 static void _cpu_ldy_zp() {
     _cpu.y = memory_read(cpu_fetch_zp());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+
 }
 
 static void _cpu_ldy_zpx() {
-    _cpu.y = memory_read(cpu_fetch_zp() + _cpu.x);
+    _cpu.y = memory_read(cpu_fetch_zpx());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+
 }
 
 static void _cpu_ldy_abs() {
     _cpu.y = memory_read(cpu_fetch_abs());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+
 }
 
 static void _cpu_ldy_absx() {
     _cpu.y = memory_read(cpu_fetch_absx());
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+
 }
 
 static void _cpu_lsr_a() {
     cpu_set_flag(CPU_FLAG_CARRY, _cpu.a & 0x01);
     _cpu.a = _cpu.a >> 1;
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, 0);
 }
 
 static void _cpu_lsr_zp() {
@@ -1168,13 +1187,6 @@ static void _cpu_ora_abs() {
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
 }
 
-static void _cpu_ora_abs() {
-    _cpu.a |= memory_read(cpu_fetch_abs());
-
-    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
-    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
-}
-
 static void _cpu_ora_absx() {
     _cpu.a |= memory_read(cpu_fetch_absx());
 
@@ -1204,22 +1216,22 @@ static void _cpu_ora_indy() {
 }
 
 static void _cpu_pha() {
-    memory_write(_cpu.sp++, _cpu.a);
+    PUSH_8(_cpu.a);
 }
 
 static void _cpu_php() {
-    memory_write(_cpu.sp++, _cpu.flags | CPU_FLAG_BREAK);
+    PUSH_8(_cpu.flags | CPU_FLAG_BREAK);
 }
 
 static void _cpu_pla() {
-    _cpu.a = memory_read(--_cpu.sp);
+    _cpu.a = PULL_8();
 
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a >> 7);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
 }
 
 static void _cpu_plp() {
-    _cpu.flags = memory_read(--_cpu.sp);
+    _cpu.flags = PULL_8();
 }
 
 static void _cpu_rol_a() {
@@ -1366,14 +1378,12 @@ static void _cpu_ror_absx() {
 }
 
 static void _cpu_rti() {
-    _cpu.flags = memory_read(--_cpu.sp) & ~(CPU_FLAG_BREAK);
-    _cpu.pc = (memory_read(_cpu.sp - 1) << 8) | memory_read(_cpu.sp - 2);
-    _cpu.sp -= 2;
+    _cpu.flags = PULL_8() & ~(CPU_FLAG_BREAK);
+    _cpu.pc = PULL_16();
 }
 
 static void _cpu_rts() {
-    _cpu.pc = (memory_read(_cpu.sp - 1) << 8) | memory_read(_cpu.sp - 2);
-    _cpu.sp -= 2;
+    _cpu.pc = PULL_16();
 }
 
 static void _cpu_sbc_imm(){
@@ -1470,7 +1480,7 @@ static void _cpu_sei(){
 }
 
 static void _cpu_sta_zp(){
-    memory_write(cpu_fetch_zp, _cpu.a);
+    memory_write(cpu_fetch_zp(), _cpu.a);
 }
 
 static void _cpu_sta_zpx(){
@@ -1507,6 +1517,52 @@ static void _cpu_stx_zpy(){
 
 static void _cpu_stx_abs(){
     memory_write(cpu_fetch_abs(), _cpu.x);
+}
+
+static void _cpu_sty_zp(){
+    memory_write(cpu_fetch_zp(), _cpu.y);
+}
+
+static void _cpu_sty_zpx(){
+    memory_write(cpu_fetch_zpx(), _cpu.y);
+}
+
+static void _cpu_sty_abs(){
+    memory_write(cpu_fetch_abs(), _cpu.y);
+}
+
+static void _cpu_tax(){
+    _cpu.x = _cpu.a;
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+}
+
+static void _cpu_tay(){
+    _cpu.y = _cpu.a;
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.y & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.y == 0);
+}
+
+static void _cpu_tsx(){
+    _cpu.x = _cpu.sp;
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.x & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.x == 0);
+}
+
+static void _cpu_txa(){
+    _cpu.a = _cpu.x;
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+}
+
+static void _cpu_txs(){
+    _cpu.sp = _cpu.x;
+}
+
+static void _cpu_tya(){
+    _cpu.a = _cpu.y;
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & CPU_FLAG_NEGATIVE);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
 }
 
 

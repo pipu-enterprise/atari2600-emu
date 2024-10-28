@@ -1,3 +1,4 @@
+#include "atari2600_conf.h"
 #include "memory.h"
 
 #ifdef ATARI2600_CONF_MEMORY_ENABLE
@@ -14,7 +15,7 @@ void memory_reset() {
     memory_init();
 }
 
-void memory_write(uint16_t address, uint8_t data) {
+void memory_write(const uint16_t address, const uint8_t data) {
     if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
         
     } else if (
@@ -34,7 +35,7 @@ void memory_write(uint16_t address, uint8_t data) {
     }
 }
 
-uint8_t memory_read(uint16_t address) {
+uint8_t memory_read(const uint16_t address) {
 
     if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
         

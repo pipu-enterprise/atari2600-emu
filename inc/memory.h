@@ -46,7 +46,7 @@ void memory_reset();
  * @param address The address to write to
  * @param data The data to write
  */
-void memory_write(uint16_t address, uint8_t data);
+void memory_write(const uint16_t address, const uint8_t data);
  
 /*
  * @brief Read data from memory
@@ -55,7 +55,7 @@ void memory_write(uint16_t address, uint8_t data);
  *
  * @return The data read
  */
-uint8_t memory_read(uint16_t address);
+uint8_t memory_read(const uint16_t address);
 
 #else
 

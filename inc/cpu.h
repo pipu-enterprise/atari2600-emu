@@ -5,10 +5,31 @@
 
 #include "atari2600_conf.h"
 
+#define NMI_ADDR_LO 0xFFFA
+#define NMI_ADDR_HI 0xFFFB
+
+#define RES_ADDR_LO 0xFFFC
+#define RES_ADDR_HI 0xFFDD
+
+#define IRQ_ADDR_LO 0xFFFE
+#define IRQ_ADDR_HI 0xFFFF
+
+#define PUSH_8(value) \
+    memory_write((_cpu.sp--)|0x100, value)
+#define PUSH_16(value) \
+    memory_write((_cpu.sp--)|0x100, (value) & 0xff); \
+    memory_write((_cpu.sp--)|0x100, (value)>>8)
+
+#define PULL_8() \
+    memory_read((++_cpu.sp)|0x100)
+#define PULL_16() \
+    (_cpu.sp -= 2, (memory_read((_cpu.sp + 1)|0x100) << 8) | \
+    memory_read((_cpu.sp)|0x100))
+
 /*
  * @brief CPU instruction handler
  */ 
-typedef (void)(*cpu_instruction_handler_t)();
+typedef void(*cpu_instruction_handler_t)();
 
 /*
  * @brief An enum containing the CPU flags with their respective bitmask values
@@ -120,6 +141,14 @@ uint8_t cpu_fetch_zpx();
  */
 uint8_t cpu_fetch_zpy();
 
+
+/*
+ * @brief Fetch an indirect value
+ *
+ * @return The indexed indirect value
+ */
+uint16_t cpu_fetch_ind();
+
 /*
  * @brief Fetch an indexed indirect value
  *
@@ -140,14 +169,166 @@ uint16_t cpu_fetch_indy();
  * @param mask Flag mask to set
  * @param value The value of the flag
  */
-void cpu_set_flag(cpu_flag_t mask, uint8_t value);
+void cpu_set_flag(const cpu_flag_t mask, const uint8_t value);
 
 /*
  * @brief Get cpu flag
  *
  * @param mask Flag mask to get
  */
-uint8_t cpu_get_flag(cpu_flag_t mask)
+uint8_t cpu_get_flag(const cpu_flag_t mask);
+
+static void _cpu_adc_imm();
+static void _cpu_adc_zp();
+static void _cpu_adc_zpx();
+static void _cpu_adc_abs();
+static void _cpu_adc_absx();
+static void _cpu_adc_absy();
+static void _cpu_adc_indx();
+static void _cpu_adc_indy();
+static void _cpu_and_imm();
+static void _cpu_and_zp();
+static void _cpu_and_zpx();
+static void _cpu_and_abs();
+static void _cpu_and_absx();
+static void _cpu_and_absy();
+static void _cpu_and_indx();
+static void _cpu_and_indy();
+static void _cpu_asl_a();
+static void _cpu_asl_zp();
+static void _cpu_asl_zpx();
+static void _cpu_asl_abs();
+static void _cpu_asl_absx();
+static void _cpu_bcc();
+static void _cpu_bcs();
+static void _cpu_beq();
+static void _cpu_bit_zp();
+static void _cpu_bit_abs();
+static void _cpu_bmi();
+static void _cpu_bne();
+static void _cpu_bpl();
+static void _cpu_brk();
+static void _cpu_bvc();
+static void _cpu_bvs();
+static void _cpu_clc();
+static void _cpu_cld();
+static void _cpu_cli();
+static void _cpu_clv();
+static void _cpu_cmp_imm();
+static void _cpu_cmp_zp();
+static void _cpu_cmp_zpx();
+static void _cpu_cmp_abs();
+static void _cpu_cmp_absx();
+static void _cpu_cmp_absy();
+static void _cpu_cmp_indx();
+static void _cpu_cmp_indy();
+static void _cpu_cpx_imm();
+static void _cpu_cpx_zp();
+static void _cpu_cpx_abs();
+static void _cpu_cpy_imm();
+static void _cpu_cpy_zp();
+static void _cpu_cpy_abs();
+static void _cpu_dec_zp();
+static void _cpu_dec_zpx();
+static void _cpu_dec_abs();
+static void _cpu_dec_absx();
+static void _cpu_dex();
+static void _cpu_dey();
+static void _cpu_eor_imm();
+static void const _cpu_eor_zp();
+static void _cpu_eor_zpx();
+static void _cpu_eor_abs();
+static void _cpu_eor_absx();
+static void _cpu_eor_absy();
+static void _cpu_eor_indx();
+static void _cpu_eor_indy();
+static void _cpu_inc_zp();
+static void _cpu_inc_zpx();
+static void _cpu_inc_abs();
+static void _cpu_inc_absx();
+static void _cpu_inx();
+static void _cpu_iny();
+static void _cpu_jmp_abs();
+static void _cpu_jmp_ind();
+static void _cpu_jsr();
+static void _cpu_lda_imm();
+static void _cpu_lda_zp();
+static void _cpu_lda_zpx();
+static void _cpu_lda_abs();
+static void _cpu_lda_absx();
+static void _cpu_lda_absy();
+static void _cpu_lda_indx();
+static void _cpu_lda_indy();
+static void _cpu_ldx_imm();
+static void _cpu_ldx_zp();
+static void _cpu_ldx_zpy();
+static void _cpu_ldx_abs();
+static void _cpu_ldx_absy();
+static void _cpu_ldy_imm();
+static void _cpu_ldy_zp();
+static void _cpu_ldy_zpx();
+static void _cpu_ldy_abs();
+static void _cpu_ldy_absx();
+static void _cpu_lsr_a();
+static void _cpu_lsr_zp();
+static void _cpu_lsr_zpx();
+static void _cpu_lsr_abs();
+static void _cpu_lsr_absx();
+static void _cpu_nop();
+static void _cpu_ora_imm();
+static void _cpu_ora_zp();
+static void _cpu_ora_zpx();
+static void _cpu_ora_abs();
+static void _cpu_ora_absx();
+static void _cpu_ora_absy();
+static void _cpu_ora_indx();
+static void _cpu_ora_indy();
+static void _cpu_pha();
+static void _cpu_php();
+static void _cpu_pla();
+static void _cpu_plp();
+static void _cpu_rol_a();
+static void _cpu_rol_zp();
+static void _cpu_rol_zpx();
+static void _cpu_rol_abs();
+static void _cpu_rol_absx();
+static void _cpu_ror_a();
+static void _cpu_ror_zp();
+static void _cpu_ror_zpx();
+static void _cpu_ror_abs();
+static void _cpu_ror_absx();
+static void _cpu_rti();
+static void _cpu_rts();
+static void _cpu_sbc_imm();
+static void _cpu_sbc_zp();
+static void _cpu_sbc_zpx();
+static void _cpu_sbc_abs();
+static void _cpu_sbc_absx();
+static void _cpu_sbc_absy();
+static void _cpu_sbc_indx();
+static void _cpu_sbc_indy();
+static void _cpu_sec();
+static void _cpu_sed();
+static void _cpu_sei();
+static void _cpu_sta_zp();
+static void _cpu_sta_zpx();
+static void _cpu_sta_abs();
+static void _cpu_sta_absx();
+static void _cpu_sta_absy();
+static void _cpu_sta_indx();
+static void _cpu_sta_indy();
+static void _cpu_stx_zp();
+static void _cpu_stx_zpy();
+static void _cpu_stx_abs();
+static void _cpu_sty_zp();
+static void _cpu_sty_zpx();
+static void _cpu_sty_abs();
+static void _cpu_tax();
+static void _cpu_tay();
+static void _cpu_tsx();
+static void _cpu_txa();
+static void _cpu_txs();
+static void _cpu_tya();
 
 #else
 
