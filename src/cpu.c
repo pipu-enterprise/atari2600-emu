@@ -281,13 +281,13 @@ void cpu_reset() {
 }
 
 void cpu_step() {
-    uint8_t opcode = memory_read(_cpu.pc);
+    uint8_t opcode = memory_read(_cpu.pc++);
     cpu_instruction_t instr = _instr_table[opcode];
 
     if (instr.handler) {
         instr.handler();
     } 
-}
+}    
 
 uint8_t cpu_fetch_imm() {
     return memory_read(_cpu.pc++);
@@ -617,7 +617,11 @@ static void _cpu_bpl() {
 }
 
 static void _cpu_brk() {
-    //TODO
+    memory_write(_cpu.sp++, (_cpu.pc+1) & 0xff);
+    memory_write(_cpu.sp++, (_cpu.pc+1)>>8);
+    
+    cpu_set_flag(CPU_FLAG_INTERRUPT, 1);
+    memory_write(_cpu.sp++, _cpu.flags | CPU_FLAG_BREAK);
 }
 
 static void _cpu_bvc(){
@@ -980,9 +984,8 @@ static void _cpu_jmp_ind() {
 }
 
 static void _cpu_jsr() {
-    //TODO fix: pc is 16bit
-    memory_write(_cpu.sp++, (_cpu.pc+1) & 0xff);
-    memory_write(_cpu.sp++, _cpu.pc>>8);
+    memory_write(_cpu.sp++, (_cpu.pc+2) & 0xff);
+    memory_write(_cpu.sp++, (_cpu.pc+2)>>8);
     _cpu.pc = cpu_fetch_abs();
 }
 
@@ -1205,7 +1208,7 @@ static void _cpu_pha() {
 }
 
 static void _cpu_php() {
-    memory_write(_cpu.sp++, _cpu.flags);
+    memory_write(_cpu.sp++, _cpu.flags | CPU_FLAG_BREAK);
 }
 
 static void _cpu_pla() {
@@ -1363,11 +1366,14 @@ static void _cpu_ror_absx() {
 }
 
 static void _cpu_rti() {
-    /** @todo */
+    _cpu.flags = memory_read(--_cpu.sp) & ~(CPU_FLAG_BREAK);
+    _cpu.pc = (memory_read(_cpu.sp - 1) << 8) | memory_read(_cpu.sp - 2);
+    _cpu.sp -= 2;
 }
 
 static void _cpu_rts() {
-    /** @todo */
+    _cpu.pc = (memory_read(_cpu.sp - 1) << 8) | memory_read(_cpu.sp - 2);
+    _cpu.sp -= 2;
 }
 
 static void _cpu_sbc_imm(){
@@ -1448,6 +1454,59 @@ static void _cpu_sbc_indy(){
     cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
     cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
     /** @todo overflow */
+}
+
+static void _cpu_sec(){
+    cpu_set_flag(CPU_FLAG_CARRY, 1);
+}
+
+
+static void _cpu_sed(){
+    cpu_set_flag(CPU_FLAG_DECIMAL, 1);
+}
+
+static void _cpu_sei(){
+    cpu_set_flag(CPU_FLAG_INTERRUPT, 1);
+}
+
+static void _cpu_sta_zp(){
+    memory_write(cpu_fetch_zp, _cpu.a);
+}
+
+static void _cpu_sta_zpx(){
+    memory_write(cpu_fetch_zpx(), _cpu.a);
+}
+
+static void _cpu_sta_abs(){
+    memory_write(cpu_fetch_abs(), _cpu.a);
+}
+
+static void _cpu_sta_absx(){
+    memory_write(cpu_fetch_absx(), _cpu.a);
+}
+
+static void _cpu_sta_absy(){
+    memory_write(cpu_fetch_absy(), _cpu.a);
+}
+
+static void _cpu_sta_indx(){
+    memory_write(cpu_fetch_indx(), _cpu.a);
+}
+
+static void _cpu_sta_indy(){
+    memory_write(cpu_fetch_indy(), _cpu.a);
+}
+
+static void _cpu_stx_zp(){
+    memory_write(cpu_fetch_zp(), _cpu.x);
+}
+
+static void _cpu_stx_zpy(){
+    memory_write(cpu_fetch_zpy(), _cpu.x);
+}
+
+static void _cpu_stx_abs(){
+    memory_write(cpu_fetch_abs(), _cpu.x);
 }
 
 
