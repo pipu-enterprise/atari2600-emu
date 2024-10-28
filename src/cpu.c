@@ -277,7 +277,7 @@ void cpu_init() {
 }
 
 void cpu_reset() {
-    // TODO
+    /** @todo */
 }
 
 void cpu_step() {
@@ -339,9 +339,13 @@ uint8_t cpu_fetch_zpy() {
     return (memory_read(_cpu.pc++) + _cpu.y) & 0xff;
 }
 
-uint8_t cpu_set_flag(cpu_flag_t mask, uint8_t value) {
+void cpu_set_flag(cpu_flag_t mask, uint8_t value) {
     _cpu.flags &= ~(1 << mask);
     _cpu.flags |= value != 0 << mask;
+}
+
+uint8_t cpu_get_flag(cpu_flag_t mask){
+    return _cpu.flags & (1<<mask) != 0;
 }
 
 
@@ -613,6 +617,10 @@ static void _cpu_bpl() {
 }
 
 static void _cpu_brk() {
+    //TODO
+}
+
+static void _cpu_bvc(){
     //TODO
 }
 
@@ -1355,11 +1363,92 @@ static void _cpu_ror_absx() {
 }
 
 static void _cpu_rti() {
-    // TODO
+    /** @todo */
 }
 
 static void _cpu_rts() {
-    // TODO
+    /** @todo */
 }
+
+static void _cpu_sbc_imm(){
+    uint8_t val = cpu_fetch_imm();
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_zp(){
+    uint8_t val = memory_read(cpu_fetch_zp());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_zpx(){
+    uint8_t val = memory_read(cpu_fetch_zpx());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_abs(){
+    uint8_t val = memory_read(cpu_fetch_abs());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_absx(){
+    uint8_t val = memory_read(cpu_fetch_absx());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_absy(){
+    uint8_t val = memory_read(cpu_fetch_absy());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_indx(){
+    uint8_t val = memory_read(cpu_fetch_indx());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
+static void _cpu_sbc_indy(){
+    uint8_t val = memory_read(cpu_fetch_indy());
+    uint8_t prev = _cpu.a;
+    _cpu.a = _cpu.a - val - ~cpu_get_flag(CPU_FLAG_CARRY);
+    cpu_set_flag(CPU_FLAG_CARRY, prev >= val);
+    cpu_set_flag(CPU_FLAG_NEGATIVE, _cpu.a & 0x80);
+    cpu_set_flag(CPU_FLAG_ZERO, _cpu.a == 0);
+    /** @todo overflow */
+}
+
 
 #endif // MODULE_CPU_ENABLE
