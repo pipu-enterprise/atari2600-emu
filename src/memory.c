@@ -15,44 +15,44 @@ void memory_reset() {
 }
 
 void memory_write(uint16_t address, uint8_t data) {
-    if (address <= MEMORY_TIA_REG_SIZE) {
-        // TODO: TIA registers
+    if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
+        
     } else if (
-            address >= MEMORY_RAM_BASE && 
-            address <= MEMORY_RAM_BASE + MEMORY_RAM_SIZE) {
-        // RAM
-        _memory.ram[address - MEMORY_RAM_BASE] = data;
+            address >= MEMORY_PPU_REG_BASE &&
+            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_SIZE) {
+
     } else if (
-            address >= MEMORY_RIOT_REG_BASE && 
-            address <= MEMORY_RIOT_REG_BASE + MEMORY_RIOT_REG_SIZE) {
-        // TODO: RIOT registers
+            address >= MEMORY_PPU_REG_BASE &&
+            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_MIRROR_SIZE) {
+
     } else if (
-            address >= MEMORY_ROM_BASE && 
-            address <= MEMORY_ROM_BASE + MEMORY_ROM_SIZE) {
-        // ROM
-        _memory.rom[address - MEMORY_ROM_BASE] = data;
+            address >= MEMORY_APU_IO_REG_BASE &&
+            address <= MEMORY_APU_IO_REG_BASE + MEMORY_APU_IO_REG_SIZE) {
+
+    } else {
+    
     }
 }
 
 uint8_t memory_read(uint16_t address) {
 
-    if (address <= MEMORY_TIA_REG_SIZE) {
-        // TODO: TIA registers
-        return 0;
+    if (address <= MEMORY_RAM_BASE + MEMORY_RAM_MIRROR_SIZE) {
+        
     } else if (
-            address >= MEMORY_RAM_BASE && 
-            address <= MEMORY_RAM_BASE + MEMORY_RAM_SIZE) {
-        // RAM
-        return _memory.ram[address - MEMORY_RAM_BASE];
+            address >= MEMORY_PPU_REG_BASE &&
+            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_SIZE) {
+
     } else if (
-            address >= MEMORY_RIOT_REG_BASE && 
-            address <= MEMORY_RIOT_REG_BASE + MEMORY_RIOT_REG_SIZE) {
-        // TODO: RIOT registers
-        return 0;
+            address >= MEMORY_PPU_REG_BASE &&
+            address <= MEMORY_PPU_REG_BASE + MEMORY_PPU_REG_MIRROR_SIZE) {
+
+    } else if (
+            address >= MEMORY_APU_IO_REG_BASE &&
+            address <= MEMORY_APU_IO_REG_BASE + MEMORY_APU_IO_REG_SIZE) {
+
     } 
 
-    // ROM
-    return _memory.rom[address - MEMORY_ROM_BASE];
+    return _memory.cartridge[address - MEMORY_CARTRIDGE_BASE];
 }
 
 #endif // MODULE_MEMORY_ENABLE
