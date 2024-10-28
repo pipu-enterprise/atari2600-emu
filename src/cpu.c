@@ -277,6 +277,7 @@ void cpu_init() {
 }
 
 void cpu_reset() {
+    memory_reset();
     _cpu.pc = memory_read(RES_ADDR_LO) | (memory_read(RES_ADDR_HI) << 8);
     _cpu.sp = 0xFF;
     _cpu.a = 0;

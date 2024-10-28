@@ -4,17 +4,14 @@
 #include <stdint.h>
 
 #include "atari2600_conf.h"
+#include "cartridge.h"
 
 #define MEMORY_RAM_BASE 0x0000
 #define MEMORY_RAM_SIZE 0x0800
-
-#define MEMORY_RAM_MIRROR_BASE 0x0800
 #define MEMORY_RAM_MIRROR_SIZE 0x1800
 
 #define MEMORY_PPU_REG_BASE 0x2000
 #define MEMORY_PPU_REG_SIZE 0x0008
-
-#define MEMORY_PPU_REG_MIRROR_BASE 0x2008
 #define MEMORY_PPU_REG_MIRROR_SIZE 0x1FF8
 
 #define MEMORY_APU_IO_REG_BASE 0x4000
@@ -25,7 +22,7 @@
 
 typedef struct {
     uint8_t ram[MEMORY_RAM_SIZE];
-    uint8_t cartridge[MEMORY_CARTRIDGE_SIZE];
+    cartridge_t cartridge;
 } memory_t;
 
 #ifdef ATARI2600_CONF_MEMORY_ENABLE
