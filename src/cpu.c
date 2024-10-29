@@ -5,6 +5,7 @@
 
 #ifdef ATARI2600_CONF_CPU_ENABLE
 
+static cpu_t _cpu;
 
 static void _cpu_adc_imm() {
 
@@ -1474,8 +1475,6 @@ static cpu_instruction_t _instr_table[0xff] = {
     // TYA
     [0x98] = { .handler = _cpu_tya, .cycles = 2 },
 };
-
-static cpu_t _cpu;
 
 void cpu_init() {
     memset(&_cpu, 0, sizeof(cpu_t));
