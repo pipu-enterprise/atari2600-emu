@@ -32,7 +32,7 @@ void memory_write(uint16_t address, uint8_t data) {
         /** @todo */
         
     } else {
-        _memory.cartridge.cart_write(address, data);
+        cartridge_write(address, data);
     }
 }
 
@@ -54,7 +54,7 @@ uint8_t memory_read(uint16_t address) {
         /** @todo */
 
     }
-    return _memory.cartridge.cart_read(address);
+    return cartridge_read(address);
 }
 
 #endif // MODULE_MEMORY_ENABLE

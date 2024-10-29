@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "atari2600_conf.h"
-#include "cartridge.h"
 
 #define MEMORY_RAM_BASE 0x0000
 #define MEMORY_RAM_SIZE 0x0800
@@ -22,7 +21,6 @@
 
 typedef struct {
     uint8_t ram[MEMORY_RAM_SIZE];
-    cartridge_t cartridge;
 } memory_t;
 
 #ifdef ATARI2600_CONF_MEMORY_ENABLE
