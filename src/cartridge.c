@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#ifdef ATARI2600_CONF_CARTRIDGE_ENABLE
+#ifdef NES_CONF_CARTRIDGE_ENABLE
 
 /*
  * @brief Cartridge data
@@ -66,4 +66,4 @@ uint8_t cartridge_read(uint16_t address) {
     return _cartridge.read(address);
 }
 
-#endif //ATARI2600_CONF_CARTRIDGE_ENABLE
+#endif //NES_CONF_CARTRIDGE_ENABLE

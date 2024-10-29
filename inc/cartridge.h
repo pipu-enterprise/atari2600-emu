@@ -1,7 +1,7 @@
 #ifndef __CARTRIDGE_H__
 #define __CARTRIDGE_H__
 
-#include "atari2600_conf.h"
+#include "nes_conf.h"
 
 #include <stdint.h>
 
@@ -77,7 +77,7 @@ typedef struct {
 
 } cartridge_t;
 
-#ifdef ATARI2600_CONF_CARTRIDGE_ENABLE
+#ifdef NES_CONF_CARTRIDGE_ENABLE
 
 /*
  * @brief Initialize the cartridge
@@ -107,6 +107,6 @@ uint8_t cartridge_read(uint16_t address);
 #define cartridge_write(address, data) (NULL)
 #define cartridge_read(address) (0U)
 
-#endif //ATARI2600_CONF_CARTRIDGE_ENABLE
+#endif //NES_CONF_CARTRIDGE_ENABLE
 
 #endif //__CARTRIDGE_H__

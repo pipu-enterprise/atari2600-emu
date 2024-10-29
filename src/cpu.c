@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#ifdef ATARI2600_CONF_CPU_ENABLE
+#ifdef NES_CONF_CPU_ENABLE
 
 static cpu_t _cpu;
 

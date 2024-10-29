@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "atari2600_conf.h"
+#include "nes_conf.h"
 
 #define NMI_ADDR_LO 0xFFFA
 #define NMI_ADDR_HI 0xFFFB
@@ -75,7 +75,7 @@ typedef struct {
     uint8_t flags;
 } cpu_t;
 
-#ifdef ATARI2600_CONF_CPU_ENABLE
+#ifdef NES_CONF_CPU_ENABLE
 
 /*
  * @brief Initialize the CPU

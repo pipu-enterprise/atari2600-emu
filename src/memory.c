@@ -1,7 +1,8 @@
-#include "atari2600_conf.h"
 #include "memory.h"
 
-#ifdef ATARI2600_CONF_MEMORY_ENABLE
+#include "cartridge.h"
+
+#ifdef NES_CONF_MEMORY_ENABLE
 
 #include <string.h>
 
