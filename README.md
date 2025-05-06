@@ -1,10 +1,10 @@
-# nes-emu 
+# atari2600-emu 
 
-nes-emu is a simple C-based emulator for the Nintendo Entertainment System.
+atari2600-emu is a strangely named nes emulator written in C.
 
 ## Installation
 
-To compile nes-emu, use the provided `Makefile`. Ensure you have `gcc` or another compatible C compiler installed.
+To compile atari2600-emu, use the provided `Makefile`. Ensure you have `gcc` or another compatible C compiler installed.
 
 ```bash
 make
